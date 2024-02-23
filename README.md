@@ -35,7 +35,7 @@ Made with <3 by @Syrine && @1byteBoy
 python3 secure.py -e -D Documents/
 ```
 
-`-x` or `--extensions` is used if we want to encrypt or decrypt files with specific file extension. (Works only with directory)
+`-x` or `--extensions` is used if we want to encrypt or decrypt files with specific file extension. 
 
 ```
 python3 secure.py -e -D Documents/Coding/ -x txt,py
