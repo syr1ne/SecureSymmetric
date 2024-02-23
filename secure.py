@@ -168,7 +168,7 @@ if __name__ == '__main__':
                                     ## ToDo : add a confirmation prompt function 
                                     if args.remove and write_file : os.remove(file)
                                 # else: print("Not a valid file")
-                        else: print(f"[{E}] {B}{args.path.split("/")[-1]}{r} is an empty directory")
+                        else: print(f"[{E}] {B}{is_valid_directory(args.path)}{r} is an empty directory")
                     else: print(f"[{E}] {B}{is_valid_directory(args.path)}{r} is not a valid directory")
                 except TypeError as e: print(f"[{E}] Please provide a directory path ")
             else: 
