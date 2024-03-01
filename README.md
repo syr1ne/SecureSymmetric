@@ -53,8 +53,9 @@ python3 secure.py -e -D Documents/Coding/ -x txt,py -o /tmp
 
 - [ ] Might add support for verbosity as an option
 - [ ] Support for binary files, since now it only supports plain text encryption
-- [ ] Try to clean and optimise the code
-
+- [x] Try to clean and optimise the code (not quite but works)
+- [x] Fix directory permission, notadirectory issue
+- [ ] Integrate some element of `is_valid_directory` and `is_valid_file` together
 ----
 
 Made with <3 by [Syrine](https://github.com/syr1ne) and [8bitBoy](https://github.com/1byteBoy)

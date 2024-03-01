@@ -13,7 +13,7 @@ C = '\033[96m' # Cyan
 Y = '\033[93m' # Yellow
 r = '\033[0m'  # reset color value
 
-# Success and Error color coding
+# Success and Error prompt color coding
 S = f'{G}*{r}'
 E = f'{R}!{r}'
 
@@ -39,13 +39,17 @@ def input_master_key ():
 
 ## renames encrpted and decrupted file and also stores the directory position
 def tweaking (file):
-    if file.find("/") : 
+
+    if file.find("/") > 1 :
         file_name = file.split("/")[-1]
         ## extracts the initial file directory if any
         file_path = '/'.join(file.split("/")[:-1]) 
-    
+    else : 
+        file_name = file
+        file_path = './'
+
     ## rename the encryped file just for the convinience of understanding
-    if   args.encrypt: file_name = "enc_" + file_name
+    if  args.encrypt: file_name = "enc_" + file_name
     ## just takes away the 'enc_' from the file name
     ## Todo: might fix this for better logic
     elif args.decrypt: file = file[4:]
@@ -53,7 +57,7 @@ def tweaking (file):
 
 
 ## encryption and decryption in one function
-def operation(file, fernet):
+def enc_dec (file, fernet):
     dec_failed = False
     global write_file
     file_name, file_path  = tweaking(file)
@@ -97,29 +101,51 @@ def operation(file, fernet):
 
 # checks if the single file is valid and prints related errors
 def is_valid_file (file_path):
+    stupid_path = -1 
     try:
-        file = file_path.split("/")[-1]
-    except: pass
+        if file_path.find("/") > 1:
+            file = file_path.split("/")[-1]
+            while(file == '') : 
+                file = file_path.split("/")[-1 + stupid_path]
+                stupid_path = stupid_path - 1
+        else: file = file_path
+    except AttributeError: 
+        print(f"[{E}] Please provide a file path"); exit(0)
+
     try:
-        with open(file_path, 'r') as file: return True
-    except TypeError: print(f"[{E}] Please provide a file path")
-    except FileNotFoundError: print(f"[{E}] The specified file {C}{file}{r} does not exist")
-    except PermissionError: print(f"[{E}] Permission denied for file {C}{file}{r}")
-    except IsADirectoryError: print(f"[{E}] {B}{file}{r} is a directory")
+        with open(file_path, 'r') as theFile:
+            _ = theFile.read()
+            return True
+    except FileNotFoundError : print(f"[{E}] The specified file {C}{file}{r} does not exist")
+    except PermissionError   : print(f"[{E}] Permission denied for file {C}{file}{r}")
+    except IsADirectoryError : print(f"[{E}] {B}{file}{r} is a directory")
+    except UnicodeDecodeError: print(f"[{E}] Sorry, binary file ({G}{file}{r}) support coming soon!")
     return False
 
 
-## some stupid directory or path sanity thingy 
-def is_valid_directory(dir_path):
-    stupid_path = -1
+## Fancy Directory check errors 
+def is_valid_directory (dir_path):
+    stupid_path = -1 # to check from the negetive index 
     try:
-        directory = dir_path.split("/")[-1]
-        while(directory == '') : 
-            directory = dir_path.split("/")[-1 + stupid_path]
-            stupid_path = stupid_path - 1
-    except: pass
-    return directory
-
+        if dir_path.find("/") > 1:
+            directory = dir_path.split("/")[-1]
+            while(directory == '') : 
+                directory = dir_path.split("/")[-1 + stupid_path]
+                stupid_path = stupid_path - 1
+    except AttributeError : 
+        print(f"[{E}] Please provide a directory path")
+        return False
+    try:
+        dirContent = os.listdir(dir_path)
+        if len(dirContent) > 0 : return True
+        else: print(f"[{E}] {B}{is_valid_directory(args.path)}{r} is an empty directory")
+    except FileNotFoundError: 
+        if args.output: print(f"[{E}] Invalid output directory {B}{directory}{r} "); exit(0)
+        else: print(f"[{E}] The specified directory {B}{directory}{r} does not exist")
+    except PermissionError   : print(f"[{E}] Permission denied for folder {B}{directory}{r}")
+    except NotADirectoryError: print(f"[{E}] {B}{directory}{r} is not a directory")
+    return False
+    
 
 # lots of flags and arguments 
 print(" ") # sorry i have OCD
@@ -141,40 +167,33 @@ args = parser.parse_args()
 # initial logic and condition sets
 if __name__ == '__main__':
     if not any(vars(args).values()): parser.print_help()
-    elif args.encrypt and args.decrypt: print("[!] Please use only one cryptographic process")
+    elif args.encrypt and args.decrypt: print(f"[{R}!{r}] Please use only one cryptographic process")
     elif args.encrypt or args.decrypt:
         try:
             if args.output : 
-                if os.path.isdir(args.output): out_dir_path = args.output
-                else : print(f"[!] Invalid Output directory {B}{is_valid_directory(args.output)}{r}"); exit(0)
+                if is_valid_directory(args.output): out_dir_path = args.output
+                # else : print(f"[!] Invalid Output directory {B}{is_valid_directory(args.output)}{r}"); exit(0)
             if args.dir:
                 if args.extensions is not None:
                     ## args.extensions will carry the list of all provided extensions ##
                     args.extensions = [ext.strip() for ext in args.extensions.split(",")]
-                try:
-                    if os.path.isdir(args.path):
-                        dirContent = os.listdir(args.path)
-                        if len(dirContent) > 0 : 
-                            fernet = input_master_key()
-                            for content in dirContent:
-                                file = os.path.join(args.path,content)
-                                if is_valid_file(file):
-                                    if args.extensions:
-                                        for extension in args.extensions:
-                                            if file.endswith(extension):
-                                                operation(file, fernet)
-                                                break 
-                                    else: operation(file, fernet)
-                                    ## ToDo : add a confirmation prompt function 
-                                    if args.remove and write_file : os.remove(file)
-                                # else: print("Not a valid file")
-                        else: print(f"[{E}] {B}{is_valid_directory(args.path)}{r} is an empty directory")
-                    else: print(f"[{E}] {B}{is_valid_directory(args.path)}{r} is not a valid directory")
-                except TypeError as e: print(f"[{E}] Please provide a directory path ")
+                if is_valid_directory(args.path):
+                    dirContent = os.listdir(args.path)
+                    fernet = input_master_key()
+                    for content in dirContent:
+                        file = os.path.join(args.path,content)
+                        if is_valid_file(file):
+                            if args.extensions:
+                                for extension in args.extensions:
+                                    if file.endswith(extension):
+                                        enc_dec(file, fernet)
+                                        break 
+                            else: enc_dec(file, fernet)
+                            if args.remove and write_file : os.remove(file)
             else: 
                 if is_valid_file(args.path):
                     fernet = input_master_key()
-                    operation(args.path, fernet)
+                    enc_dec(args.path, fernet)
                     if args.remove and write_file : os.remove(args.path)
         except KeyboardInterrupt: print("\n\nBye ....")
     else: print(f"[{E}] Please choose a cryptographic process")
