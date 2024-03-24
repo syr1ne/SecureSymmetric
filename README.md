@@ -1,9 +1,23 @@
 ## What is SecureSymmetric ?
 
 In general it's just a cool name for the project but actually it's just a simple program that encrypts file using 
-*fernet's symmetric 'secret key' based authenticated cryptography.*
+*fernet's symmetric `secret key` based authenticated cryptography.*
 
 Learn more about **Fernet** at https://cryptography.io/en/latest/fernet/
+
+## DISCLAIMER
+
+This program is intended for educational and legitimate purposes only. It provides encryption and decryption functionalities using Fernet cryptography, designed to protect data privacy and security. However, it is crucial to note that misuse of this software for malicious activities such as ransomware attacks is strictly prohibited and unlawful.
+
+The developers of this program, do not endorse, promote, or encourage any illegal or unethical use of this software. Users are solely responsible for their actions and must comply with applicable laws and regulations in their jurisdictions.
+
+By using this software, you agree to use it responsibly and ethically. The developer shall not be held liable for any misuse or unlawful activities conducted using this program.
+
+## PERSONAL NOTE
+
+As said earlier, this is just a simple code that i wrote to learn about how symmetric encrytion works and the usage of fernet. This is totally a personal project and i am not a good developer at all, so please test the code on test files before using on your important files. Feel free to make necessary changes from your side. 
+
+Personally i don't like storing data on cloud storage, so it's better for me to store it offline but that too can be vulnerable, specially in case of a ransomeware attack. So if you are willing to save to the cloud and also encrypt it, this tool can help, or better use [cryptomator](https://cryptomator.org/).
 
 ## Usage
 
@@ -49,13 +63,6 @@ python3 secure.py -e -D Documents/Coding/ -x txt,py -o /tmp
 
 `-r` or `--remove` is used to remove the files after they are either encrypted or decrptred
 
-## ToDo
-
-- [ ] Might add support for verbosity as an option
-- [ ] Support for binary files, since now it only supports plain text encryption
-- [x] Try to clean and optimise the code (not quite but works)
-- [x] Fix directory permission, notadirectory issue
-- [ ] Integrate some element of `is_valid_directory` and `is_valid_file` together
 ----
 
 Made with <3 by [Syrine](https://github.com/syr1ne) and [8bitBoy](https://github.com/1byteBoy)

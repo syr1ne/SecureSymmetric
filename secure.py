@@ -102,6 +102,7 @@ def path_handling (path):
         exit()
 
     obj_path = separator.join(path.split(separator)[:-bogus_path])
+    if path[0] == separator : obj_path = separator + obj_path
     if len(obj_path) != 0: obj_path = obj_path + separator
     else: obj_path = obj_name
     return obj_name, obj_path
