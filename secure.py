@@ -7,6 +7,7 @@ from getpass import getpass
 from base64 import urlsafe_b64encode
 from cryptography.fernet import Fernet
 from argparse import ArgumentParser, SUPPRESS
+from shutil import make_archive
 
 # Shell colors, originally these are light version of the colors
 R = '\033[91m' # Light Red
@@ -43,7 +44,7 @@ def gen_fernet_key (masterpass:bytes) -> bytes:
 def input_master_key ():
     if   args.encrypt: for_what = 'Encryption'
     elif args.decrypt: for_what = 'Decryption'
-    masterpass = getpass(f"{P}[▬]{r} Enter {for_what} Password: "); print() # <- OCD issue sorry
+    masterpass = getpass(f"{P}[▬]{r} Enter {for_what} Password: "); print()
     key = gen_fernet_key(masterpass.encode('utf-8'))
     return Fernet(key)
 
@@ -80,9 +81,12 @@ def process_data (file_name, path, data, fernet):
             output_file.seek(0)
             if args.encrypt: 
                 output_file.write(enc_data)
+                print(file_path)
+                os.chmod(file_path, 0o444)
                 print(f"[{S}] Successfully Encrypted {G}{file_name}{r}")
             elif args.decrypt and dec_failed == False:
                 output_file.write(dec_data)
+                os.chmod(file_path, 0o644)
                 print(f"[{S}] Successfully Decrypted {G}{file_name}{r}")
 
 
@@ -126,7 +130,7 @@ def process_file (file_path):
     return False, None, None, None
 
 
-# directories baby 
+# check directory
 def is_valid_directory (dir_path, is_out_dir=None):
     directory_name, path = path_handling(dir_path)
     if is_out_dir:
@@ -147,15 +151,14 @@ def is_valid_directory (dir_path, is_out_dir=None):
     
 
 # lots of flags and arguments 
-print(" ") # sorry i have OCD
+print(" ")
 parser = ArgumentParser (description=f'{I}Encrypts and Decrypts plain-text data{r}', 
                          epilog='Made with <3 by @Syrine && @1byteBoy',
                          usage="%(prog)s [OPTIONS...] [PATH...]")
 
 parser.add_argument("-e", "--encrypt", action="store_true", help="Encrypt the file")
 parser.add_argument("-d", "--decrypt", action="store_true", help="Decrypt the file")
-parser.add_argument("-D", "--dir", action="store_true", help="Work with a whole directory of files") 
-parser.add_argument("-x", "--extensions", type=str, metavar='', help="Specify specific file extensions") 
+parser.add_argument("-D", "--dir", action="store_true", help="Work with a whole directory of files")
 parser.add_argument("-o", "--output", type=str, metavar='', help="Output file path") 
 parser.add_argument("-r", "--remove", action="store_true", help="Removes original file after encryting or decrypting")
 parser.add_argument("-v", "--verbose", action="store_true", help="For verbosity")
@@ -174,23 +177,18 @@ if __name__ == '__main__':
             if args.output : 
                 its_out_dir, out_dir_path = is_valid_directory(args.output, True)
             if args.dir:
-                if args.extensions is not None:
-                    args.extensions = [ext.strip() for ext in args.extensions.split(",")]
                 if is_valid_directory(args.path):
                     fernet = input_master_key()
-                    dirContent = os.listdir(args.path)
-                    for content in dirContent:
-                        file_path = os.path.join(args.path, content)
-                        is_file, file_name, path, data = process_file(file_path)
-                        if its_out_dir : path = out_dir_path
-                        if is_file:
-                            if args.extensions:
-                                for extension in args.extensions:
-                                    if file_path.endswith(extension):
-                                        process_data(file_name, path, data, fernet)
-                                        break 
-                            else: process_data(file_name, path, data, fernet)
-                            if args.remove and write_file : os.remove(file_path)
+                    archived = make_archive(args.path, 'zip', args.path)
+                    zip_file_name = args.path + '.zip'
+                    if os.path.exists(zip_file_name): print("file zipped!") # beautify this
+                    else: print("ZIP file not created") # and this
+                    is_file, file_name, path, data = process_file(zip_file_name)
+                    if its_out_dir : path = out_dir_path
+                    if is_file:
+                        process_data(file_name, path, data, fernet)
+                        os.remove(zip_file_name)
+                        if args.remove and write_file : os.remove(args.path)
             else:
                 is_file, file_name, path, data = process_file(args.path)
                 if its_out_dir : path = out_dir_path
